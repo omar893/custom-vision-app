@@ -1,8 +1,4 @@
-const express = require('express');
-const cors = require('cors');
-
-//import isCar from './isCar';
-
+//Cound not figure out how to export this to server.js
 
 const util = require('util');
 const fs = require('fs');
@@ -29,42 +25,11 @@ const predictor = new PredictionApi.PredictionAPIClient(predictor_credentials, p
 
 const isCar = async (picture) => {
     const sampleProject = "ba7df439-29c2-4a24-9e91-8d6955b7cc93";
-    console.log(picture);
-    const testFile = picture.file; //fs.readFileSync(picture); 
+
+    const testFile = fs.readFileSync(picture);
     const results = await predictor.classifyImage(sampleProject, publishIterationName, testFile);
     console.log("Results:");
-    return results.predictions[0];
+    return results.predictions;
 }
 
-const multer  = require('multer');
-const upload = multer();
-
-const app = express();
-app.use(cors());
-const port = process.env.PORT || 5000;
-
-app.post('/api/predict', upload.single('file'),(req, res, next) => {
-    res.send(isCar(req.body));
-
-//   const process = spawn('node', ['custom-vision-script.js']);
-
-//   let data = '';
-
-//   process.stdout.on('data', (chunk) => {
-//     data += chunk;
-//   });
-
-//   process.on('close', () => {
-//     try {
-//       const results = JSON.parse(data);
-//       res.json(results);
-//     } catch (error) {
-//       console.error('Error parsing prediction results:', error);
-//       res.status(500).json({ error: 'An error occurred while fetching prediction results.' });
-//     }
-//   });
-});
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+export default isCar;

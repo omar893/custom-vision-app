@@ -20,57 +20,66 @@ const trainer = new TrainingApi.TrainingAPIClient(credentials, trainingEndpoint)
 const predictor_credentials = new msRest.ApiKeyCredentials({ inHeader: { "Prediction-key": predictionKey } });
 const predictor = new PredictionApi.PredictionAPIClient(predictor_credentials, predictionEndpoint);
 
-(async () => {
-    console.log("Creating project...");
-    const sampleProject = await trainer.createProject("Sample Project");
-    const carTag = await trainer.createTag(sampleProject.id, "Car");
-    const notCarTag = await trainer.createTag(sampleProject.id, "Not Car");
+// (async () => {
+//     console.log("Creating project...");
+//     const sampleProject = await trainer.createProject("Sample Project");
+//     const carTag = await trainer.createTag(sampleProject.id, "Car");
+//     const notCarTag = await trainer.createTag(sampleProject.id, "Not Car");
 
-    //Upload and tag images
-    const sampleDataRoot = "ImageClassification/Images";
+//     //Upload and tag images
+//     const sampleDataRoot = "ImageClassification/Images";
 
-    console.log("Adding images...");
-    let fileUploadPromises = [];
+//     console.log("Adding images...");
+//     let fileUploadPromises = [];
 
-    const carDir = `${sampleDataRoot}/Car`;
-    const carFiles = fs.readdirSync(carDir);
-    carFiles.forEach(file => {
-        fileUploadPromises.push(trainer.createImagesFromData(sampleProject.id, fs.readFileSync(`${carDir}/${file}`), { tagIds: [carTag.id] }));
-    });
+//     const carDir = `${sampleDataRoot}/Car`;
+//     const carFiles = fs.readdirSync(carDir);
+//     carFiles.forEach(file => {
+//         fileUploadPromises.push(trainer.createImagesFromData(sampleProject.id, fs.readFileSync(`${carDir}/${file}`), { tagIds: [carTag.id] }));
+//     });
 
-    const notCarDir = `${sampleDataRoot}/Not_Car`;
-    const notCarFiles = fs.readdirSync(notCarDir);
-    notCarFiles.forEach(file => {
-        fileUploadPromises.push(trainer.createImagesFromData(sampleProject.id, fs.readFileSync(`${notCarDir}/${file}`), { tagIds: [notCarTag.id] }));
-    });
+//     const notCarDir = `${sampleDataRoot}/Not_Car`;
+//     const notCarFiles = fs.readdirSync(notCarDir);
+//     notCarFiles.forEach(file => {
+//         fileUploadPromises.push(trainer.createImagesFromData(sampleProject.id, fs.readFileSync(`${notCarDir}/${file}`), { tagIds: [notCarTag.id] }));
+//     });
 
-    await Promise.all(fileUploadPromises);
+//     await Promise.all(fileUploadPromises);
 
-    //This code creates the first iteration of the prediction model.
-    console.log("Training...");
-    let trainingIteration = await trainer.trainProject(sampleProject.id);
+//     //This code creates the first iteration of the prediction model.
+//     console.log("Training...");
+//     let trainingIteration = await trainer.trainProject(sampleProject.id);
 
-    // Wait for training to complete
-    console.log("Training started...");
-    while (trainingIteration.status == "Training") {
-        console.log("Training status: " + trainingIteration.status);
-        await setTimeoutPromise(1000, null);
-        trainingIteration = await trainer.getIteration(sampleProject.id, trainingIteration.id)
-    }
-    console.log("Training status: " + trainingIteration.status);
+//     // Wait for training to complete
+//     console.log("Training started...");
+//     while (trainingIteration.status == "Training") {
+//         console.log("Training status: " + trainingIteration.status);
+//         await setTimeoutPromise(1000, null);
+//         trainingIteration = await trainer.getIteration(sampleProject.id, trainingIteration.id)
+//     }
+//     console.log("Training status: " + trainingIteration.status);
     
-    // Publish the iteration to the end point
-    await trainer.publishIteration(sampleProject.id, trainingIteration.id, publishIterationName, predictionResourceId);
+//     // Publish the iteration to the end point
+//     await trainer.publishIteration(sampleProject.id, trainingIteration.id, publishIterationName, predictionResourceId);
 
 
-    //Send an image to the prediction endpoint and retrive the prediction
-    const testFile = fs.readFileSync(`${sampleDataRoot}/Test/test_image.jpg`);
+//     //Send an image to the prediction endpoint and retrive the prediction
+//     const testFile = fs.readFileSync(`${sampleDataRoot}/Test/test_image.jpg`);
 
-    const results = await predictor.classifyImage(sampleProject.id, publishIterationName, testFile);
+//     const results = await predictor.classifyImage(sampleProject.id, publishIterationName, testFile);
 
-    // Show results
+//     // Show results
+//     console.log("Results:");
+//     results.predictions.forEach(predictedResult => {
+//         console.log(`\t ${predictedResult.tagName}: ${(predictedResult.probability * 100.0).toFixed(2)}%`);
+//     });
+// })
+
+(async () => {
+    const sampleProject = "ba7df439-29c2-4a24-9e91-8d6955b7cc93";
+
+    const testFile = fs.readFileSync(`ImageClassification/Images/Test/test_image.jpg`);
+    const results = await predictor.classifyImage(sampleProject, publishIterationName, testFile);
     console.log("Results:");
-    results.predictions.forEach(predictedResult => {
-        console.log(`\t ${predictedResult.tagName}: ${(predictedResult.probability * 100.0).toFixed(2)}%`);
-    });
-})()
+    console.log(results.predictions);
+}) ()
